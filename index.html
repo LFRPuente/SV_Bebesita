@@ -1,0 +1,66 @@
+﻿<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sorpresa de San Valentin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=Playfair+Display:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="bg-shapes" aria-hidden="true">
+      <span class="shape shape-1"></span>
+      <span class="shape shape-2"></span>
+      <span class="shape shape-3"></span>
+    </div>
+
+    <main class="app">
+      <header class="hero">
+        <p class="tag">Para mi bebesita</p>
+        <h1>5 sopesitas para la bebesita m&aacute;s hermosa</h1>
+        <p class="subtitle">
+          Toca cualquier regalo y deja que cada sorpresa aparezca en su momento.
+        </p>
+        <div class="countdown-box" aria-live="polite">
+          <span class="countdown-label">Siguiente paquete en</span>
+          <strong id="countdownValue" class="countdown-value">--:--:--</strong>
+          <span id="countdownHint" class="countdown-hint"></span>
+        </div>
+      </header>
+
+      <section>
+        <div id="giftGrid" class="gift-grid" aria-live="polite"></div>
+        <div class="secret-slot">
+          <button id="secretGiftBtn" class="secret-gift-btn" type="button" hidden>
+            <img class="secret-gift-icon" src="imagenes/Sheimbau.png" alt="" aria-hidden="true" />
+            <span class="secret-gift-label">Sopesita secreta</span>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <div id="revealModal" class="reveal-modal" hidden>
+      <div class="reveal-overlay" data-close-modal></div>
+      <section class="reveal-content" role="dialog" aria-modal="true" aria-labelledby="revealTitle">
+        <button id="closeModalBtn" class="close-modal" type="button" aria-label="Cerrar sorpresa">
+          &times;
+        </button>
+        <h2 id="revealTitle"></h2>
+        <p id="revealText"></p>
+        <div id="revealImages" class="reveal-images"></div>
+        <div id="revealActions" class="reveal-actions"></div>
+      </section>
+    </div>
+
+    <button id="secretResetBtn" class="secret-reset" type="button" aria-label="Reiniciar sorpresitas">
+      &#8635;
+    </button>
+
+    <script src="script.js"></script>
+  </body>
+</html>
