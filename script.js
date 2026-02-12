@@ -53,10 +53,18 @@ const secretReveal = {
   images: [{ src: "imagenes/carcason.jpg", alt: "Carcassonne y su expansion" }]
 };
 
+const welcomeReveal = {
+  title: "Hola cola te amo mucho",
+  text: "",
+  images: [{ src: "imagenes/Pola.jpeg", alt: "Pola" }],
+  fullImageMode: true
+};
+
 const STORAGE_KEY = "sorpresitas_estado_v4";
 
 const grid = document.getElementById("giftGrid");
 const revealModal = document.getElementById("revealModal");
+const revealContent = revealModal ? revealModal.querySelector(".reveal-content") : null;
 const revealTitle = document.getElementById("revealTitle");
 const revealText = document.getElementById("revealText");
 const revealImages = document.getElementById("revealImages");
@@ -141,6 +149,10 @@ function renderActions(actions) {
 }
 
 function openReveal(step, actions = []) {
+  if (revealContent) {
+    revealContent.classList.toggle("full-image-mode", Boolean(step.fullImageMode));
+  }
+
   revealTitle.textContent = step.title;
 
   if (step.text) {
@@ -451,3 +463,5 @@ if (resetBtn) {
 if (secretGiftBtn) {
   secretGiftBtn.addEventListener("click", openSecretGift);
 }
+
+openReveal(welcomeReveal);

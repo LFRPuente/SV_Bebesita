@@ -437,6 +437,23 @@ h1 {
   animation: fadeUp 0.3s ease both;
 }
 
+.reveal-content.full-image-mode {
+  width: min(900px, 96vw);
+}
+
+.reveal-content.full-image-mode .reveal-images {
+  grid-template-columns: 1fr;
+  justify-items: center;
+}
+
+.reveal-content.full-image-mode .reveal-images img {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: calc(100vh - 180px);
+  object-fit: contain;
+}
+
 .close-modal {
   position: absolute;
   top: 0.5rem;
