@@ -56,11 +56,30 @@ const secretReveal = {
 const welcomeReveal = {
   title: "Hola cola te amo mucho",
   text: "",
-  images: [{ src: "imagenes/Pola.jpeg", alt: "Pola" }],
-  fullImageMode: true
+  images: [
+    {
+      src: "imagenes/Pola.jpeg",
+      alt: "Pola",
+      caption: "una pola chill congel\u00e1ndose."
+    },
+    {
+      src: "imagenes/colanavidad.jpeg",
+      alt: "Cola navidad",
+      caption: "Colita feliz con buz\u00f3n."
+    },
+    {
+      src: "imagenes/colaconsue\u00f1o.jpeg",
+      alt: "Cola con sueno",
+      caption: "una colita preciosa preparada para la fiesta"
+    }
+  ],
+  fullImageMode: true,
+  sliderMode: true
 };
 
 const STORAGE_KEY = "sorpresitas_estado_v4";
+const MUSIC_VIDEO_ID = "A1MdThqGarI";
+const MUSIC_VOLUME = 35;
 
 const grid = document.getElementById("giftGrid");
 const revealModal = document.getElementById("revealModal");
@@ -74,9 +93,17 @@ const resetBtn = document.getElementById("secretResetBtn");
 const secretGiftBtn = document.getElementById("secretGiftBtn");
 const countdownValue = document.getElementById("countdownValue");
 const countdownHint = document.getElementById("countdownHint");
+const musicToggleBtn = document.getElementById("musicToggleBtn");
 
 const cardRefs = [];
 const buttonRefs = [];
+let revealSliderTimer = null;
+let musicPlayer = null;
+let musicPlayerReady = false;
+let musicShouldPlay = true;
+let musicAwaitingUserGesture = false;
+let musicInitialUnlockPending = true;
+let clearMusicUnlockListeners = null;
 
 function getDefaultState() {
   return {
@@ -121,6 +148,240 @@ function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
+function stopRevealSlider() {
+  if (revealSliderTimer !== null) {
+    window.clearInterval(revealSliderTimer);
+    revealSliderTimer = null;
+  }
+}
+
+function updateMusicButton() {
+  if (!musicToggleBtn) {
+    return;
+  }
+
+  if (musicShouldPlay) {
+    if (!musicPlayerReady) {
+      musicToggleBtn.textContent = "Cargando musica...";
+      musicToggleBtn.classList.remove("playing");
+      musicToggleBtn.classList.remove("needs-gesture");
+      return;
+    }
+
+    musicToggleBtn.textContent = "Pausar musica";
+    musicToggleBtn.classList.add("playing");
+    musicToggleBtn.classList.remove("needs-gesture");
+    return;
+  }
+
+  if (musicPlayerReady) {
+    musicToggleBtn.textContent = "Reproducir musica";
+  } else {
+    musicToggleBtn.textContent = "Cargando musica...";
+  }
+
+  musicToggleBtn.classList.remove("playing");
+  musicToggleBtn.classList.remove("needs-gesture");
+}
+
+function removeMusicUnlockHandlers() {
+  if (typeof clearMusicUnlockListeners === "function") {
+    clearMusicUnlockListeners();
+    clearMusicUnlockListeners = null;
+  }
+}
+
+function refreshMusicGestureState() {
+  if (!musicPlayer || !musicPlayerReady || !window.YT || !window.YT.PlayerState) {
+    return;
+  }
+
+  const state =
+    typeof musicPlayer.getPlayerState === "function"
+      ? musicPlayer.getPlayerState()
+      : window.YT.PlayerState.UNSTARTED;
+  const muted = typeof musicPlayer.isMuted === "function" ? musicPlayer.isMuted() : true;
+  const isPlaying = state === window.YT.PlayerState.PLAYING;
+
+  musicAwaitingUserGesture =
+    musicShouldPlay && (musicInitialUnlockPending || !isPlaying || muted);
+  if (musicAwaitingUserGesture) {
+    installMusicUnlockHandlers();
+  } else {
+    removeMusicUnlockHandlers();
+  }
+
+  updateMusicButton();
+}
+
+function tryEnableMusicSound(restartFromBeginning = false) {
+  if (!musicPlayer || !musicPlayerReady || !musicShouldPlay) {
+    return;
+  }
+
+  if (restartFromBeginning && typeof musicPlayer.seekTo === "function") {
+    musicPlayer.seekTo(0, true);
+  }
+
+  musicPlayer.unMute();
+  musicPlayer.setVolume(MUSIC_VOLUME);
+  musicPlayer.playVideo();
+
+  window.setTimeout(refreshMusicGestureState, 220);
+}
+
+function installMusicUnlockHandlers() {
+  if (clearMusicUnlockListeners) {
+    return;
+  }
+
+  const unlock = () => {
+    if (!musicShouldPlay) {
+      return;
+    }
+
+    if (!musicPlayerReady) {
+      musicInitialUnlockPending = true;
+      return;
+    }
+
+    musicInitialUnlockPending = false;
+    tryEnableMusicSound(true);
+  };
+
+  const onKeydown = () => {
+    unlock();
+  };
+
+  document.addEventListener("pointerdown", unlock, { passive: true });
+  document.addEventListener("touchstart", unlock, { passive: true });
+  document.addEventListener("keydown", onKeydown);
+
+  clearMusicUnlockListeners = () => {
+    document.removeEventListener("pointerdown", unlock);
+    document.removeEventListener("touchstart", unlock);
+    document.removeEventListener("keydown", onKeydown);
+  };
+}
+
+function playMusic() {
+  if (!musicPlayer || !musicPlayerReady) {
+    return;
+  }
+
+  musicShouldPlay = true;
+  musicInitialUnlockPending = false;
+  tryEnableMusicSound();
+}
+
+function pauseMusic() {
+  if (!musicPlayer || !musicPlayerReady) {
+    return;
+  }
+
+  musicShouldPlay = false;
+  musicAwaitingUserGesture = false;
+  musicInitialUnlockPending = false;
+  musicPlayer.pauseVideo();
+  removeMusicUnlockHandlers();
+  updateMusicButton();
+}
+
+function ensureMusicPlayer() {
+  if (musicPlayer || !window.YT || !window.YT.Player) {
+    return;
+  }
+
+  musicPlayer = new window.YT.Player("youtubePlayer", {
+    height: "1",
+    width: "1",
+    videoId: MUSIC_VIDEO_ID,
+    playerVars: {
+      autoplay: 1,
+      controls: 0,
+      disablekb: 1,
+      fs: 0,
+      iv_load_policy: 3,
+      loop: 1,
+      mute: 0,
+      modestbranding: 1,
+      playsinline: 1,
+      rel: 0,
+      playlist: MUSIC_VIDEO_ID
+    },
+    events: {
+      onReady: () => {
+        musicPlayerReady = true;
+        musicShouldPlay = true;
+        musicInitialUnlockPending = true;
+        musicAwaitingUserGesture = true;
+        musicPlayer.setVolume(MUSIC_VOLUME);
+        installMusicUnlockHandlers();
+        tryEnableMusicSound(true);
+        updateMusicButton();
+
+        window.setTimeout(() => {
+          tryEnableMusicSound(true);
+          if (musicAwaitingUserGesture) {
+            installMusicUnlockHandlers();
+          }
+        }, 650);
+      },
+      onStateChange: (event) => {
+        if (!window.YT || !window.YT.PlayerState) {
+          return;
+        }
+
+        if (event.data === window.YT.PlayerState.PLAYING) {
+          musicShouldPlay = true;
+        } else if (event.data === window.YT.PlayerState.PAUSED) {
+          if (musicShouldPlay) {
+            musicPlayer.playVideo();
+          }
+        } else if (event.data === window.YT.PlayerState.ENDED) {
+          musicShouldPlay = true;
+          musicPlayer.playVideo();
+        }
+
+        if (musicShouldPlay && musicAwaitingUserGesture) {
+          installMusicUnlockHandlers();
+        }
+
+        refreshMusicGestureState();
+      }
+    }
+  });
+}
+
+function handleMusicToggle() {
+  ensureMusicPlayer();
+
+  if (!musicPlayerReady) {
+    musicShouldPlay = true;
+    if (musicToggleBtn) {
+      musicToggleBtn.textContent = "Cargando musica...";
+    }
+    return;
+  }
+
+  if (musicAwaitingUserGesture) {
+    musicShouldPlay = true;
+    musicInitialUnlockPending = false;
+    tryEnableMusicSound(true);
+    installMusicUnlockHandlers();
+    return;
+  }
+
+  if (musicShouldPlay) {
+    pauseMusic();
+    return;
+  }
+
+  musicInitialUnlockPending = false;
+  playMusic();
+  installMusicUnlockHandlers();
+}
+
 function renderImages(images) {
   revealImages.innerHTML = "";
 
@@ -132,6 +393,147 @@ function renderImages(images) {
     img.loading = "lazy";
     revealImages.appendChild(img);
   }
+}
+
+function renderImageSlider(images) {
+  revealImages.innerHTML = "";
+
+  const slider = document.createElement("div");
+  slider.className = "welcome-slider";
+
+  const frame = document.createElement("div");
+  frame.className = "welcome-slider-frame";
+
+  const imageElement = document.createElement("img");
+  imageElement.loading = "eager";
+  frame.appendChild(imageElement);
+
+  const captionBox = document.createElement("aside");
+  captionBox.className = "welcome-slider-caption";
+  captionBox.setAttribute("aria-live", "polite");
+
+  const captionText = document.createElement("p");
+  captionBox.appendChild(captionText);
+
+  const stage = document.createElement("div");
+  stage.className = "welcome-slider-stage";
+  stage.appendChild(frame);
+  stage.appendChild(captionBox);
+
+  const dots = document.createElement("div");
+  dots.className = "welcome-slider-dots";
+
+  let slideIndex = 0;
+  const dotButtons = [];
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let hasActiveTouch = false;
+
+  function setSlide(nextIndex) {
+    slideIndex = (nextIndex + images.length) % images.length;
+    const currentImage = images[slideIndex];
+    const description = currentImage.caption || currentImage.alt || "";
+
+    imageElement.src = currentImage.src;
+    imageElement.alt = currentImage.alt;
+    captionText.textContent = description;
+
+    frame.classList.remove("is-entering");
+    captionBox.classList.remove("is-entering");
+    void frame.offsetWidth;
+    frame.classList.add("is-entering");
+    captionBox.classList.add("is-entering");
+
+    for (let i = 0; i < dotButtons.length; i += 1) {
+      dotButtons[i].classList.toggle("active", i === slideIndex);
+    }
+  }
+
+  function startAutoSlide() {
+    stopRevealSlider();
+    revealSliderTimer = window.setInterval(() => {
+      setSlide(slideIndex + 1);
+    }, 3200);
+  }
+
+  for (let i = 0; i < images.length; i += 1) {
+    const dotButton = document.createElement("button");
+    dotButton.type = "button";
+    dotButton.className = "welcome-slider-dot";
+    dotButton.setAttribute("aria-label", `Ir a imagen ${i + 1}`);
+    dotButton.addEventListener("click", () => {
+      setSlide(i);
+      startAutoSlide();
+    });
+    dotButtons.push(dotButton);
+    dots.appendChild(dotButton);
+  }
+
+  function onTouchStart(event) {
+    if (event.touches.length !== 1) {
+      return;
+    }
+
+    stopRevealSlider();
+    const touch = event.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    hasActiveTouch = true;
+  }
+
+  function onTouchEnd(event) {
+    if (!hasActiveTouch) {
+      startAutoSlide();
+      return;
+    }
+
+    hasActiveTouch = false;
+    const touch = event.changedTouches[0];
+    if (!touch) {
+      startAutoSlide();
+      return;
+    }
+
+    const deltaX = touch.clientX - touchStartX;
+    const deltaY = touch.clientY - touchStartY;
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
+
+    if (absDeltaX > 36 && absDeltaX > absDeltaY * 1.2) {
+      if (deltaX < 0) {
+        setSlide(slideIndex + 1);
+      } else {
+        setSlide(slideIndex - 1);
+      }
+    }
+
+    startAutoSlide();
+  }
+
+  slider.addEventListener("mouseenter", stopRevealSlider);
+  slider.addEventListener("mouseleave", startAutoSlide);
+  slider.addEventListener("touchstart", onTouchStart, { passive: true });
+  slider.addEventListener("touchend", onTouchEnd, { passive: true });
+  slider.addEventListener("touchcancel", startAutoSlide, { passive: true });
+
+  slider.appendChild(stage);
+  revealImages.appendChild(slider);
+  revealImages.appendChild(dots);
+
+  setSlide(0);
+  startAutoSlide();
+}
+
+function renderRevealMedia(step) {
+  const media = Array.isArray(step.images) ? step.images : [];
+
+  if (step.sliderMode && media.length > 1) {
+    renderImageSlider(media);
+    return;
+  }
+
+  stopRevealSlider();
+  renderImages(media);
 }
 
 function renderActions(actions) {
@@ -162,7 +564,8 @@ function openReveal(step, actions = []) {
     revealText.hidden = true;
   }
 
-  renderImages(step.images || []);
+  revealImages.classList.toggle("slider-mode", Boolean(step.sliderMode));
+  renderRevealMedia(step);
   revealImages.classList.toggle("icon-mode", Boolean(step.iconMode));
   renderActions(actions);
 
@@ -171,6 +574,7 @@ function openReveal(step, actions = []) {
 }
 
 function closeModal() {
+  stopRevealSlider();
   revealModal.hidden = true;
   document.body.classList.remove("modal-open");
 }
@@ -463,5 +867,24 @@ if (resetBtn) {
 if (secretGiftBtn) {
   secretGiftBtn.addEventListener("click", openSecretGift);
 }
+
+const previousYouTubeReady = window.onYouTubeIframeAPIReady;
+window.onYouTubeIframeAPIReady = () => {
+  if (typeof previousYouTubeReady === "function") {
+    previousYouTubeReady();
+  }
+
+  ensureMusicPlayer();
+};
+
+if (musicToggleBtn) {
+  musicToggleBtn.addEventListener("click", handleMusicToggle);
+}
+
+if (window.YT && window.YT.Player) {
+  ensureMusicPlayer();
+}
+
+updateMusicButton();
 
 openReveal(welcomeReveal);
