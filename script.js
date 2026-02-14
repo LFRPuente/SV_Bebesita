@@ -112,8 +112,48 @@ function getDefaultState() {
     revealIndex: 0,
     secretButtonVisible: false,
     secretOpened: false,
-    opened: Array(gifts.length).fill(false)
+    opened: Array(gifts.length).fill(false),
+    revealedStepByCard: Array(gifts.length).fill(-1)
   };
+}
+
+function buildRevealedStepMap(opened, savedMap) {
+  const map = Array(gifts.length).fill(-1);
+  const usedSteps = new Set();
+
+  if (Array.isArray(savedMap)) {
+    for (let i = 0; i < gifts.length; i += 1) {
+      const rawStep = Number(savedMap[i]);
+      if (Number.isInteger(rawStep) && rawStep >= 0 && rawStep < revealSteps.length) {
+        map[i] = rawStep;
+        usedSteps.add(rawStep);
+      }
+    }
+  }
+
+  let nextStep = 0;
+  while (usedSteps.has(nextStep) && nextStep < revealSteps.length) {
+    nextStep += 1;
+  }
+
+  for (let i = 0; i < gifts.length; i += 1) {
+    if (!opened[i] || map[i] !== -1) {
+      continue;
+    }
+
+    if (nextStep >= revealSteps.length) {
+      break;
+    }
+
+    map[i] = nextStep;
+    usedSteps.add(nextStep);
+
+    while (usedSteps.has(nextStep) && nextStep < revealSteps.length) {
+      nextStep += 1;
+    }
+  }
+
+  return map;
 }
 
 function loadState() {
@@ -133,11 +173,19 @@ function loadState() {
       opened[i] = Boolean(parsed.opened[i]);
     }
 
+    const revealedStepByCard = buildRevealedStepMap(opened, parsed.revealedStepByCard);
+    const maxMappedStep = Math.max(...revealedStepByCard, -1);
+    const safeRevealIndex = Math.max(
+      0,
+      Math.min(Math.floor(parsed.revealIndex), revealSteps.length)
+    );
+
     return {
-      revealIndex: Math.max(0, Math.min(Math.floor(parsed.revealIndex), revealSteps.length)),
+      revealIndex: Math.max(safeRevealIndex, Math.min(maxMappedStep + 1, revealSteps.length)),
       secretButtonVisible: Boolean(parsed.secretButtonVisible),
       secretOpened: Boolean(parsed.secretOpened),
-      opened
+      opened,
+      revealedStepByCard
     };
   } catch {
     return getDefaultState();
@@ -726,8 +774,14 @@ function refreshCards() {
 
     if (state.opened[i]) {
       card.classList.add("opened");
-      button.disabled = true;
-      button.textContent = "Abierta";
+      const stepIndex = Number(state.revealedStepByCard[i]);
+      if (Number.isInteger(stepIndex) && stepIndex >= 0 && stepIndex < revealSteps.length) {
+        button.disabled = false;
+        button.textContent = "Ver de nuevo";
+      } else {
+        button.disabled = true;
+        button.textContent = "Abierta";
+      }
       continue;
     }
 
@@ -764,9 +818,15 @@ function showLockedMessage(slot) {
 
 function openCard(index) {
   if (state.opened[index]) {
+    const assignedStep = Number(state.revealedStepByCard[index]);
+    if (Number.isInteger(assignedStep) && assignedStep >= 0 && assignedStep < revealSteps.length) {
+      openReveal(revealSteps[assignedStep]);
+      return;
+    }
+
     openReveal({
       title: "Esta sorpresita ya fue abierta",
-      text: "Prueba abrir otra cajita para seguir descubriendo.",
+      text: "No pude recuperar la sorpresa exacta de esta cajita.",
       images: []
     });
     return;
@@ -789,8 +849,10 @@ function openCard(index) {
     return;
   }
 
-  state.opened[index] = true;
+  const assignedStep = state.revealIndex;
   const step = getNextReveal();
+  state.opened[index] = true;
+  state.revealedStepByCard[index] = assignedStep;
   state.revealIndex += 1;
 
   if (state.revealIndex >= revealSteps.length) {
