@@ -1146,6 +1146,15 @@ h1 {
   font-weight: 600;
 }
 
+.kiss-animation {
+  font-size: clamp(2.1rem, 7vw, 3.3rem);
+  line-height: 1;
+  margin: -0.35rem 0 1.3rem;
+  display: inline-block;
+  transform-origin: center;
+  animation: kissBounce 1.2s ease-in-out infinite;
+}
+
 .restart-game-btn {
   border: 0;
   border-radius: 12px;
@@ -1186,6 +1195,16 @@ h1 {
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes kissBounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.14);
   }
 }
 

@@ -969,6 +969,9 @@ const GOOD_ITEM_SPEED = 3; // pixels per frame - más rápidos (más difíciles)
 const BAD_ITEM_SPEED = 2; // pixels per frame - más lentos (más fáciles de evitar)
 const SPAWN_RATE = 1200; // milliseconds
 const PLAYER_SPEED = 3; // percentage per frame
+const GOOD_ITEM_POINTS = 10;
+const BAD_ITEM_POINTS = -15;
+const MISSED_GOOD_ITEM_PENALTY = -4; // Menor al valor del item bueno atrapado
 const MAX_SCORE = 100;
 const MIN_SCORE = -50; // Game over si llega a -50
 
@@ -1080,7 +1083,7 @@ function spawnItem() {
     x: parseFloat(item.style.left),
     y: -50,
     isGood: isGood,
-    points: isGood ? 10 : -15,
+    points: isGood ? GOOD_ITEM_POINTS : BAD_ITEM_POINTS,
     speed: isGood ? GOOD_ITEM_SPEED : BAD_ITEM_SPEED
   };
 
@@ -1147,6 +1150,10 @@ function gameUpdate() {
 
     // Eliminar si salió de la pantalla
     if (item.y > canvasRect.height) {
+      // Si era un item bueno que no atrapaste, pierdes puntos
+      if (item.isGood) {
+        updateScore(MISSED_GOOD_ITEM_PENALTY);
+      }
       item.element.remove();
       gameState.fallingItems.splice(i, 1);
     }
