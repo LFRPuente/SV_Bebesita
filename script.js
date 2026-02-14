@@ -963,7 +963,8 @@ let gameState = {
 
 const GOOD_ITEMS = ["❤️", "🎁", "🌮", "💝", "🌹"];
 const BAD_ITEMS = ["💔", "😡", "⚡"];
-const ITEM_FALL_SPEED = 2; // pixels per frame
+const GOOD_ITEM_SPEED = 3; // pixels per frame - más rápidos (más difíciles)
+const BAD_ITEM_SPEED = 2; // pixels per frame - más lentos (más fáciles de evitar)
 const SPAWN_RATE = 1200; // milliseconds
 const PLAYER_SPEED = 3; // percentage per frame
 const MAX_SCORE = 100;
@@ -1060,13 +1061,16 @@ function spawnItem() {
   item.className = "falling-item";
   item.textContent = emoji;
   item.style.left = `${Math.random() * 90 + 5}%`;
+  item.style.top = '-50px';
+  item.style.position = 'absolute';
 
   const itemData = {
     element: item,
     x: parseFloat(item.style.left),
     y: -50,
     isGood: isGood,
-    points: isGood ? 10 : -15
+    points: isGood ? 10 : -15,
+    speed: isGood ? GOOD_ITEM_SPEED : BAD_ITEM_SPEED
   };
 
   gameCanvas.appendChild(item);
@@ -1105,7 +1109,7 @@ function gameUpdate() {
 
   for (let i = gameState.fallingItems.length - 1; i >= 0; i--) {
     const item = gameState.fallingItems[i];
-    item.y += ITEM_FALL_SPEED;
+    item.y += item.speed;
     item.element.style.top = `${item.y}px`;
 
     // Verificar colisión con jugador
