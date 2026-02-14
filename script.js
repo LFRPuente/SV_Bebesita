@@ -34,11 +34,11 @@ const revealSteps = [
 ];
 
 const releaseSlots = [
-  { timeLabel: "10:00 AM", unlockAt: new Date(2026, 1, 14, 10, 0, 0, 0) },
-  { timeLabel: "11:00 AM", unlockAt: new Date(2026, 1, 14, 11, 0, 0, 0) },
-  { timeLabel: "12:00 PM", unlockAt: new Date(2026, 1, 14, 12, 0, 0, 0) },
-  { timeLabel: "2:30 PM", unlockAt: new Date(2026, 1, 14, 14, 30, 0, 0) },
-  { timeLabel: "3:30 PM", unlockAt: new Date(2026, 1, 14, 15, 30, 0, 0) }
+  { timeLabel: "10:00 AM", unlockAt: new Date(2026, 1, 12, 10, 0, 0, 0) },
+  { timeLabel: "11:00 AM", unlockAt: new Date(2026, 1, 12, 11, 0, 0, 0) },
+  { timeLabel: "12:00 PM", unlockAt: new Date(2026, 1, 12, 12, 0, 0, 0) },
+  { timeLabel: "2:30 PM", unlockAt: new Date(2026, 1, 12, 14, 30, 0, 0) },
+  { timeLabel: "3:30 PM", unlockAt: new Date(2026, 1, 12, 15, 30, 0, 0) }
 ];
 
 const fallbackStep = {
@@ -686,7 +686,7 @@ function updateCountdown() {
     const diff = currentSlot.unlockAt.getTime() - now.getTime();
     if (diff > 0) {
       countdownValue.textContent = formatCountdown(diff);
-      countdownHint.textContent = `Se desbloquea el 14 de febrero de 2026 a las ${currentSlot.timeLabel}.`;
+      countdownHint.textContent = `Se desbloquea el 12 de febrero de 2026 a las ${currentSlot.timeLabel}.`;
       return;
     }
 
@@ -757,7 +757,7 @@ function getNextReveal() {
 function showLockedMessage(slot) {
   openReveal({
     title: "Todavia no se puede abrir",
-    text: `Esta sorpresita se desbloquea el 14 de febrero de 2026 a las ${slot.timeLabel}.`,
+    text: `Esta sorpresita se desbloquea el 12 de febrero de 2026 a las ${slot.timeLabel}.`,
     images: []
   });
 }
