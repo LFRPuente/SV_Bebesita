@@ -12,9 +12,9 @@ const revealSteps = [
     ]
   },
   {
-    title: "Te regalo una imagen inedita de cola pola",
+    title: "Te regalo una imagen inedita de bebesita pola",
     text: "",
-    images: [{ src: "imagenes/colaypola.jpeg", alt: "Imagen inedita de cola y pola" }]
+    images: [{ src: "imagenes/colaypola.jpeg", alt: "Imagen inedita de bebesita y pola" }]
   },
   {
     title: "Tarjeta de regalo",
@@ -34,11 +34,11 @@ const revealSteps = [
 ];
 
 const releaseSlots = [
-  { timeLabel: "10:00 AM", unlockAt: new Date(2026, 1, 12, 10, 0, 0, 0) },
-  { timeLabel: "11:00 AM", unlockAt: new Date(2026, 1, 12, 11, 0, 0, 0) },
-  { timeLabel: "12:00 PM", unlockAt: new Date(2026, 1, 12, 12, 0, 0, 0) },
-  { timeLabel: "2:30 PM", unlockAt: new Date(2026, 1, 12, 14, 30, 0, 0) },
-  { timeLabel: "3:30 PM", unlockAt: new Date(2026, 1, 12, 15, 30, 0, 0) }
+  { timeLabel: "10:00 AM", unlockAt: new Date(2026, 1, 14, 10, 0, 0, 0) },
+  { timeLabel: "11:00 AM", unlockAt: new Date(2026, 1, 14, 11, 0, 0, 0) },
+  { timeLabel: "12:00 PM", unlockAt: new Date(2026, 1, 14, 12, 0, 0, 0) },
+  { timeLabel: "2:30 PM", unlockAt: new Date(2026, 1, 14, 14, 30, 0, 0) },
+  { timeLabel: "3:30 PM", unlockAt: new Date(2026, 1, 14, 15, 30, 0, 0) }
 ];
 
 const fallbackStep = {
@@ -54,7 +54,7 @@ const secretReveal = {
 };
 
 const welcomeReveal = {
-  title: "Hola cola te amo mucho",
+  title: "Hola bebesita te amo mucho",
   text: "",
   images: [
     {
@@ -64,13 +64,13 @@ const welcomeReveal = {
     },
     {
       src: "imagenes/colanavidad.jpeg",
-      alt: "Cola navidad",
-      caption: "Colita feliz con buzón."
+      alt: "Bebesita navidad",
+      caption: "Bebesita feliz con buzón."
     },
     {
       src: "imagenes/colaconsueño.jpeg",
-      alt: "Cola con sueno",
-      caption: "una colita preciosa preparada para la fiesta"
+      alt: "Bebesita con sueno",
+      caption: "una bebesita preciosa preparada para la fiesta"
     }
   ],
   fullImageMode: true,
@@ -686,7 +686,7 @@ function updateCountdown() {
     const diff = currentSlot.unlockAt.getTime() - now.getTime();
     if (diff > 0) {
       countdownValue.textContent = formatCountdown(diff);
-      countdownHint.textContent = `Se desbloquea el 12 de febrero de 2026 a las ${currentSlot.timeLabel}.`;
+      countdownHint.textContent = `Se desbloquea el 14 de febrero de 2026 a las ${currentSlot.timeLabel}.`;
       return;
     }
 
@@ -757,7 +757,7 @@ function getNextReveal() {
 function showLockedMessage(slot) {
   openReveal({
     title: "Todavia no se puede abrir",
-    text: `Esta sorpresita se desbloquea el 12 de febrero de 2026 a las ${slot.timeLabel}.`,
+    text: `Esta sorpresita se desbloquea el 14 de febrero de 2026 a las ${slot.timeLabel}.`,
     images: []
   });
 }
