@@ -83,12 +83,9 @@
         </div>
 
         <div class="game-progress">
-          <div class="progress-label">
-            <span>Amor</span>
-            <span id="gameScore" class="score-value">0/100</span>
-          </div>
           <div class="progress-bar">
             <div id="progressFill" class="progress-fill"></div>
+            <span id="gameScore" class="score-overlay">0</span>
           </div>
         </div>
 
@@ -101,6 +98,14 @@
             <h2>¡Felicidades Bebesita!</h2>
             <p>Te ganaste tus sopesitas ❤️</p>
             <button id="restartGameBtn" class="restart-game-btn">Jugar de nuevo</button>
+          </div>
+        </div>
+
+        <div id="gameOver" class="game-victory" hidden>
+          <div class="victory-content game-over-content">
+            <h2>Game Over 💔</h2>
+            <p>¡Inténtalo de nuevo!</p>
+            <button id="retryGameBtn" class="restart-game-btn">Reintentar</button>
           </div>
         </div>
       </div>

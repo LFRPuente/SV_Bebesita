@@ -949,7 +949,9 @@ const player = document.getElementById("player");
 const gameScoreEl = document.getElementById("gameScore");
 const progressFill = document.getElementById("progressFill");
 const gameVictory = document.getElementById("gameVictory");
+const gameOver = document.getElementById("gameOver");
 const restartGameBtn = document.getElementById("restartGameBtn");
+const retryGameBtn = document.getElementById("retryGameBtn");
 
 let gameState = {
   isPlaying: false,
@@ -968,6 +970,7 @@ const BAD_ITEM_SPEED = 2; // pixels per frame - más lentos (más fáciles de ev
 const SPAWN_RATE = 1200; // milliseconds
 const PLAYER_SPEED = 3; // percentage per frame
 const MAX_SCORE = 100;
+const MIN_SCORE = -50; // Game over si llega a -50
 
 // Abrir/Cerrar modal del juego
 function openGameModal() {
@@ -1002,6 +1005,14 @@ if (gameModal) {
 if (restartGameBtn) {
   restartGameBtn.addEventListener("click", () => {
     gameVictory.hidden = true;
+    resetGame();
+    startGame();
+  });
+}
+
+if (retryGameBtn) {
+  retryGameBtn.addEventListener("click", () => {
+    gameOver.hidden = true;
     resetGame();
     startGame();
   });
@@ -1092,12 +1103,26 @@ function checkCollision(item) {
 
 // Actualizar puntuación
 function updateScore(points) {
-  gameState.score = Math.max(0, Math.min(MAX_SCORE, gameState.score + points));
-  gameScoreEl.textContent = `${gameState.score}/${MAX_SCORE}`;
-  progressFill.style.width = `${gameState.score}%`;
+  gameState.score = Math.max(MIN_SCORE, Math.min(MAX_SCORE, gameState.score + points));
+  gameScoreEl.textContent = `${gameState.score}`;
 
+  // Calcular el porcentaje de la barra (0 es el centro, 50%)
+  // Score de -50 a 100 se mapea a 0% a 100%
+  const percentage = ((gameState.score - MIN_SCORE) / (MAX_SCORE - MIN_SCORE)) * 100;
+  progressFill.style.width = `${percentage}%`;
+
+  // Cambiar color si es negativo
+  if (gameState.score < 0) {
+    progressFill.classList.add('negative');
+  } else {
+    progressFill.classList.remove('negative');
+  }
+
+  // Verificar victoria o derrota
   if (gameState.score >= MAX_SCORE) {
     winGame();
+  } else if (gameState.score <= MIN_SCORE) {
+    loseGame();
   }
 }
 
@@ -1140,11 +1165,18 @@ function winGame() {
   }, 300);
 }
 
+// Perder el juego
+function loseGame() {
+  stopGame();
+
+  setTimeout(() => {
+    gameOver.hidden = false;
+  }, 300);
+}
+
 // Iniciar juego
 function startGame() {
   gameState.isPlaying = true;
-  gameState.score = 0;
-  updateScore(0);
   updatePlayerPosition();
 
   // Spawn inicial
@@ -1183,7 +1215,13 @@ function resetGame() {
   // Resetear estado
   gameState.score = 0;
   gameState.playerX = 50;
-  updateScore(0);
-  updatePlayerPosition();
   gameVictory.hidden = true;
+  gameOver.hidden = true;
+
+  // Actualizar UI
+  gameScoreEl.textContent = '0';
+  progressFill.style.width = '33.33%'; // 0 puntos está en el 33% (de -50 a 100)
+  progressFill.classList.remove('negative');
+
+  updatePlayerPosition();
 }

@@ -1028,40 +1028,45 @@ h1 {
   opacity: 0;
 }
 
-.progress-label {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-  font-weight: 800;
-  color: var(--accent-dark);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 0.9rem;
-}
-
-.score-value {
-  color: var(--accent);
-  font-size: 1.1rem;
-}
-
 .progress-bar {
-  height: 32px;
+  height: 40px;
   background: linear-gradient(170deg, #fff, #fff5f9);
-  border: 2px solid #ffd9e6;
+  border: 3px solid #ffd9e6;
   border-radius: 999px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: inset 0 2px 8px rgba(157, 24, 55, 0.1);
   position: relative;
 }
 
 .progress-fill {
   height: 100%;
-  width: 0%;
+  width: 50%;
   background: linear-gradient(90deg, #ff6b9d, #ff94af, #cf2f52);
   border-radius: 999px;
   transition: width 0.3s ease;
   box-shadow: 0 0 12px rgba(207, 47, 82, 0.4);
+  position: relative;
+}
+
+.progress-fill.negative {
+  background: linear-gradient(90deg, #8b0000, #dc143c, #ff6347);
+}
+
+.score-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--text-main);
+  z-index: 2;
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+}
+
+.game-over-content h2 {
+  color: #dc143c;
 }
 
 .game-canvas {
