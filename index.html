@@ -65,6 +65,47 @@
       Pausar musica
     </button>
 
+    <button id="gameBtn" class="game-button" type="button">
+      🌮 Sopesa
+    </button>
+
+    <!-- Modal del Minijuego -->
+    <div id="gameModal" class="game-modal" hidden>
+      <div class="game-overlay" data-close-game></div>
+      <div class="game-container">
+        <button id="closeGameBtn" class="close-game-btn" type="button" aria-label="Cerrar juego">
+          &times;
+        </button>
+
+        <div class="game-header">
+          <h1 class="game-title">¡Atrapa las Sopesitas! 💝</h1>
+          <p class="game-instructions">Mueve la canasta deslizando el dedo ⬅️➡️</p>
+        </div>
+
+        <div class="game-progress">
+          <div class="progress-label">
+            <span>Amor</span>
+            <span id="gameScore" class="score-value">0/100</span>
+          </div>
+          <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+        </div>
+
+        <div id="gameCanvas" class="game-canvas">
+          <div id="player" class="player">🧺</div>
+        </div>
+
+        <div id="gameVictory" class="game-victory" hidden>
+          <div class="victory-content">
+            <h2>¡Felicidades Bebesita!</h2>
+            <p>Te ganaste tus sopesitas ❤️</p>
+            <button id="restartGameBtn" class="restart-game-btn">Jugar de nuevo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="youtubePlayer" style="position: absolute; left: -9999px; width: 1px; height: 1px;" aria-hidden="true"></div>
 
     <script src="https://www.youtube.com/iframe_api"></script>

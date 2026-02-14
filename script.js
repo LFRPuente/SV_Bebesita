@@ -936,3 +936,250 @@ if (window.YT && window.YT.Player) {
 updateMusicButton();
 
 openReveal(welcomeReveal);
+
+// ========================================
+// MINIJUEGO: ATRAPA LAS SOPESITAS
+// ========================================
+
+const gameModal = document.getElementById("gameModal");
+const gameBtn = document.getElementById("gameBtn");
+const closeGameBtn = document.getElementById("closeGameBtn");
+const gameCanvas = document.getElementById("gameCanvas");
+const player = document.getElementById("player");
+const gameScoreEl = document.getElementById("gameScore");
+const progressFill = document.getElementById("progressFill");
+const gameVictory = document.getElementById("gameVictory");
+const restartGameBtn = document.getElementById("restartGameBtn");
+
+let gameState = {
+  isPlaying: false,
+  score: 0,
+  playerX: 50, // percentage
+  touchStartX: 0,
+  fallingItems: [],
+  gameLoop: null,
+  spawnInterval: null
+};
+
+const GOOD_ITEMS = ["❤️", "🎁", "🌮", "💝", "🌹"];
+const BAD_ITEMS = ["💔", "😡", "⚡"];
+const ITEM_FALL_SPEED = 2; // pixels per frame
+const SPAWN_RATE = 1200; // milliseconds
+const PLAYER_SPEED = 3; // percentage per frame
+const MAX_SCORE = 100;
+
+// Abrir/Cerrar modal del juego
+function openGameModal() {
+  gameModal.hidden = false;
+  document.body.classList.add("modal-open");
+  resetGame();
+  startGame();
+}
+
+function closeGameModal() {
+  stopGame();
+  gameModal.hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
+if (gameBtn) {
+  gameBtn.addEventListener("click", openGameModal);
+}
+
+if (closeGameBtn) {
+  closeGameBtn.addEventListener("click", closeGameModal);
+}
+
+if (gameModal) {
+  gameModal.addEventListener("click", (event) => {
+    if (event.target.hasAttribute("data-close-game")) {
+      closeGameModal();
+    }
+  });
+}
+
+if (restartGameBtn) {
+  restartGameBtn.addEventListener("click", () => {
+    gameVictory.hidden = true;
+    resetGame();
+    startGame();
+  });
+}
+
+// Movimiento del jugador con teclado
+document.addEventListener("keydown", (e) => {
+  if (!gameState.isPlaying || gameModal.hidden) return;
+
+  if (e.key === "ArrowLeft") {
+    gameState.playerX = Math.max(5, gameState.playerX - PLAYER_SPEED);
+    updatePlayerPosition();
+  } else if (e.key === "ArrowRight") {
+    gameState.playerX = Math.min(95, gameState.playerX + PLAYER_SPEED);
+    updatePlayerPosition();
+  }
+});
+
+// Movimiento del jugador con touch
+if (gameCanvas) {
+  gameCanvas.addEventListener("touchstart", (e) => {
+    if (!gameState.isPlaying) return;
+    e.preventDefault();
+    gameState.touchStartX = e.touches[0].clientX;
+  }, { passive: false });
+
+  gameCanvas.addEventListener("touchmove", (e) => {
+    if (!gameState.isPlaying) return;
+    e.preventDefault();
+
+    const touch = e.touches[0];
+    const rect = gameCanvas.getBoundingClientRect();
+    const relativeX = touch.clientX - rect.left;
+    const percentage = (relativeX / rect.width) * 100;
+
+    gameState.playerX = Math.max(5, Math.min(95, percentage));
+    updatePlayerPosition();
+  }, { passive: false });
+}
+
+function updatePlayerPosition() {
+  if (player) {
+    player.style.left = `${gameState.playerX}%`;
+  }
+}
+
+// Crear item que cae
+function spawnItem() {
+  if (!gameState.isPlaying) return;
+
+  const isGood = Math.random() > 0.25; // 75% buenos, 25% malos
+  const emoji = isGood
+    ? GOOD_ITEMS[Math.floor(Math.random() * GOOD_ITEMS.length)]
+    : BAD_ITEMS[Math.floor(Math.random() * BAD_ITEMS.length)];
+
+  const item = document.createElement("div");
+  item.className = "falling-item";
+  item.textContent = emoji;
+  item.style.left = `${Math.random() * 90 + 5}%`;
+
+  const itemData = {
+    element: item,
+    x: parseFloat(item.style.left),
+    y: -50,
+    isGood: isGood,
+    points: isGood ? 10 : -15
+  };
+
+  gameCanvas.appendChild(item);
+  gameState.fallingItems.push(itemData);
+}
+
+// Detectar colisión
+function checkCollision(item) {
+  const playerRect = player.getBoundingClientRect();
+  const itemRect = item.element.getBoundingClientRect();
+
+  return !(
+    itemRect.right < playerRect.left ||
+    itemRect.left > playerRect.right ||
+    itemRect.bottom < playerRect.top ||
+    itemRect.top > playerRect.bottom
+  );
+}
+
+// Actualizar puntuación
+function updateScore(points) {
+  gameState.score = Math.max(0, Math.min(MAX_SCORE, gameState.score + points));
+  gameScoreEl.textContent = `${gameState.score}/${MAX_SCORE}`;
+  progressFill.style.width = `${gameState.score}%`;
+
+  if (gameState.score >= MAX_SCORE) {
+    winGame();
+  }
+}
+
+// Loop principal del juego
+function gameUpdate() {
+  if (!gameState.isPlaying) return;
+
+  const canvasRect = gameCanvas.getBoundingClientRect();
+
+  for (let i = gameState.fallingItems.length - 1; i >= 0; i--) {
+    const item = gameState.fallingItems[i];
+    item.y += ITEM_FALL_SPEED;
+    item.element.style.top = `${item.y}px`;
+
+    // Verificar colisión con jugador
+    if (checkCollision(item)) {
+      updateScore(item.points);
+      item.element.remove();
+      gameState.fallingItems.splice(i, 1);
+      continue;
+    }
+
+    // Eliminar si salió de la pantalla
+    if (item.y > canvasRect.height) {
+      item.element.remove();
+      gameState.fallingItems.splice(i, 1);
+    }
+  }
+
+  gameState.gameLoop = requestAnimationFrame(gameUpdate);
+}
+
+// Ganar el juego
+function winGame() {
+  stopGame();
+  createConfetti();
+
+  setTimeout(() => {
+    gameVictory.hidden = false;
+  }, 300);
+}
+
+// Iniciar juego
+function startGame() {
+  gameState.isPlaying = true;
+  gameState.score = 0;
+  updateScore(0);
+  updatePlayerPosition();
+
+  // Spawn inicial
+  spawnItem();
+
+  // Spawn periódico
+  gameState.spawnInterval = setInterval(spawnItem, SPAWN_RATE);
+
+  // Loop principal
+  gameState.gameLoop = requestAnimationFrame(gameUpdate);
+}
+
+// Detener juego
+function stopGame() {
+  gameState.isPlaying = false;
+
+  if (gameState.gameLoop) {
+    cancelAnimationFrame(gameState.gameLoop);
+    gameState.gameLoop = null;
+  }
+
+  if (gameState.spawnInterval) {
+    clearInterval(gameState.spawnInterval);
+    gameState.spawnInterval = null;
+  }
+}
+
+// Reiniciar juego
+function resetGame() {
+  stopGame();
+
+  // Limpiar items
+  gameState.fallingItems.forEach(item => item.element.remove());
+  gameState.fallingItems = [];
+
+  // Resetear estado
+  gameState.score = 0;
+  gameState.playerX = 50;
+  updateScore(0);
+  updatePlayerPosition();
+  gameVictory.hidden = true;
+}
