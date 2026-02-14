@@ -902,9 +902,23 @@ if (secretGiftBtn) {
   secretGiftBtn.addEventListener("click", openSecretGift);
 }
 
+const previousYouTubeReady = window.onYouTubeIframeAPIReady;
+window.onYouTubeIframeAPIReady = () => {
+  if (typeof previousYouTubeReady === "function") {
+    previousYouTubeReady();
+  }
+
+  ensureMusicPlayer();
+};
+
 if (musicToggleBtn) {
   musicToggleBtn.addEventListener("click", handleMusicToggle);
 }
 
-ensureMusicPlayer();
+if (window.YT && window.YT.Player) {
+  ensureMusicPlayer();
+}
+
+updateMusicButton();
+
 openReveal(welcomeReveal);
