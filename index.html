@@ -62,12 +62,10 @@
     </button>
 
     <button id="musicToggleBtn" class="music-toggle" type="button" aria-label="Control de musica">
-      Cargando musica...
+      Pausar musica
     </button>
 
-    <div class="youtube-player-host" aria-hidden="true">
-      <div id="youtubePlayer"></div>
-    </div>
+    <div id="youtubePlayer" style="position: absolute; left: -9999px; width: 1px; height: 1px;" aria-hidden="true"></div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="script.js"></script>
