@@ -902,6 +902,10 @@ if (secretGiftBtn) {
   secretGiftBtn.addEventListener("click", openSecretGift);
 }
 
+if (musicToggleBtn) {
+  musicToggleBtn.addEventListener("click", handleMusicToggle);
+}
+
 const previousYouTubeReady = window.onYouTubeIframeAPIReady;
 window.onYouTubeIframeAPIReady = () => {
   if (typeof previousYouTubeReady === "function") {
@@ -911,12 +915,22 @@ window.onYouTubeIframeAPIReady = () => {
   ensureMusicPlayer();
 };
 
-if (musicToggleBtn) {
-  musicToggleBtn.addEventListener("click", handleMusicToggle);
-}
-
 if (window.YT && window.YT.Player) {
   ensureMusicPlayer();
+} else {
+  // Fallback: check periodically if YT API loaded
+  let checkCount = 0;
+  const checkYTReady = setInterval(() => {
+    checkCount++;
+    if (window.YT && window.YT.Player) {
+      clearInterval(checkYTReady);
+      ensureMusicPlayer();
+    } else if (checkCount > 50) {
+      // After 10 seconds, give up
+      clearInterval(checkYTReady);
+      console.error("YouTube API failed to load");
+    }
+  }, 200);
 }
 
 updateMusicButton();
