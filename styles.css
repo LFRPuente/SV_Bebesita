@@ -805,3 +805,96 @@ h1 {
     padding: 0.56rem 0.8rem;
   }
 }
+
+/* Confetti and hearts effects */
+.confetti-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--color);
+  top: -10px;
+  left: var(--left);
+  opacity: 0;
+  animation: confettiFall var(--duration) ease-in forwards;
+  animation-delay: var(--delay);
+}
+
+.confetti-piece.square {
+  border-radius: 2px;
+}
+
+.confetti-piece.circle {
+  border-radius: 50%;
+}
+
+.confetti-piece.heart {
+  width: 16px;
+  height: 16px;
+  background: var(--color);
+  transform: rotate(-45deg);
+  animation: heartFall var(--duration) ease-in forwards;
+  animation-delay: var(--delay);
+}
+
+.confetti-piece.heart::before,
+.confetti-piece.heart::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color);
+}
+
+.confetti-piece.heart::before {
+  top: -8px;
+  left: 0;
+}
+
+.confetti-piece.heart::after {
+  top: 0;
+  left: 8px;
+}
+
+@keyframes confettiFall {
+  0% {
+    opacity: 0;
+    transform: translateY(0) rotate(0deg);
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100vh) rotate(var(--rotation, 360deg));
+  }
+}
+
+@keyframes heartFall {
+  0% {
+    opacity: 0;
+    transform: translateY(0) rotate(-45deg) scale(0.5);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(10vh) rotate(-45deg) scale(1);
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100vh) rotate(-45deg) scale(0.8);
+  }
+}

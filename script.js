@@ -60,26 +60,25 @@ const welcomeReveal = {
     {
       src: "imagenes/Pola.jpeg",
       alt: "Pola",
-      caption: "una pola chill congel\u00e1ndose."
+      caption: "una pola chill congelándose."
     },
     {
       src: "imagenes/colanavidad.jpeg",
       alt: "Cola navidad",
-      caption: "Colita feliz con buz\u00f3n."
+      caption: "Colita feliz con buzón."
     },
     {
-      src: "imagenes/colaconsue\u00f1o.jpeg",
+      src: "imagenes/colaconsueño.jpeg",
       alt: "Cola con sueno",
       caption: "una colita preciosa preparada para la fiesta"
     }
   ],
   fullImageMode: true,
-  sliderMode: true
+  sliderMode: true,
+  skipConfetti: true
 };
 
 const STORAGE_KEY = "sorpresitas_estado_v4";
-const MUSIC_VIDEO_ID = "A1MdThqGarI";
-const MUSIC_VOLUME = 35;
 
 const grid = document.getElementById("giftGrid");
 const revealModal = document.getElementById("revealModal");
@@ -93,17 +92,11 @@ const resetBtn = document.getElementById("secretResetBtn");
 const secretGiftBtn = document.getElementById("secretGiftBtn");
 const countdownValue = document.getElementById("countdownValue");
 const countdownHint = document.getElementById("countdownHint");
-const musicToggleBtn = document.getElementById("musicToggleBtn");
 
 const cardRefs = [];
 const buttonRefs = [];
+
 let revealSliderTimer = null;
-let musicPlayer = null;
-let musicPlayerReady = false;
-let musicShouldPlay = true;
-let musicAwaitingUserGesture = false;
-let musicInitialUnlockPending = true;
-let clearMusicUnlockListeners = null;
 
 function getDefaultState() {
   return {
@@ -153,233 +146,6 @@ function stopRevealSlider() {
     window.clearInterval(revealSliderTimer);
     revealSliderTimer = null;
   }
-}
-
-function updateMusicButton() {
-  if (!musicToggleBtn) {
-    return;
-  }
-
-  if (musicShouldPlay) {
-    if (!musicPlayerReady) {
-      musicToggleBtn.textContent = "Cargando musica...";
-      musicToggleBtn.classList.remove("playing");
-      musicToggleBtn.classList.remove("needs-gesture");
-      return;
-    }
-
-    musicToggleBtn.textContent = "Pausar musica";
-    musicToggleBtn.classList.add("playing");
-    musicToggleBtn.classList.remove("needs-gesture");
-    return;
-  }
-
-  if (musicPlayerReady) {
-    musicToggleBtn.textContent = "Reproducir musica";
-  } else {
-    musicToggleBtn.textContent = "Cargando musica...";
-  }
-
-  musicToggleBtn.classList.remove("playing");
-  musicToggleBtn.classList.remove("needs-gesture");
-}
-
-function removeMusicUnlockHandlers() {
-  if (typeof clearMusicUnlockListeners === "function") {
-    clearMusicUnlockListeners();
-    clearMusicUnlockListeners = null;
-  }
-}
-
-function refreshMusicGestureState() {
-  if (!musicPlayer || !musicPlayerReady || !window.YT || !window.YT.PlayerState) {
-    return;
-  }
-
-  const state =
-    typeof musicPlayer.getPlayerState === "function"
-      ? musicPlayer.getPlayerState()
-      : window.YT.PlayerState.UNSTARTED;
-  const muted = typeof musicPlayer.isMuted === "function" ? musicPlayer.isMuted() : true;
-  const isPlaying = state === window.YT.PlayerState.PLAYING;
-
-  musicAwaitingUserGesture =
-    musicShouldPlay && (musicInitialUnlockPending || !isPlaying || muted);
-  if (musicAwaitingUserGesture) {
-    installMusicUnlockHandlers();
-  } else {
-    removeMusicUnlockHandlers();
-  }
-
-  updateMusicButton();
-}
-
-function tryEnableMusicSound(restartFromBeginning = false) {
-  if (!musicPlayer || !musicPlayerReady || !musicShouldPlay) {
-    return;
-  }
-
-  if (restartFromBeginning && typeof musicPlayer.seekTo === "function") {
-    musicPlayer.seekTo(0, true);
-  }
-
-  musicPlayer.unMute();
-  musicPlayer.setVolume(MUSIC_VOLUME);
-  musicPlayer.playVideo();
-
-  window.setTimeout(refreshMusicGestureState, 220);
-}
-
-function installMusicUnlockHandlers() {
-  if (clearMusicUnlockListeners) {
-    return;
-  }
-
-  const unlock = () => {
-    if (!musicShouldPlay) {
-      return;
-    }
-
-    if (!musicPlayerReady) {
-      musicInitialUnlockPending = true;
-      return;
-    }
-
-    musicInitialUnlockPending = false;
-    tryEnableMusicSound(true);
-  };
-
-  const onKeydown = () => {
-    unlock();
-  };
-
-  document.addEventListener("pointerdown", unlock, { passive: true });
-  document.addEventListener("touchstart", unlock, { passive: true });
-  document.addEventListener("keydown", onKeydown);
-
-  clearMusicUnlockListeners = () => {
-    document.removeEventListener("pointerdown", unlock);
-    document.removeEventListener("touchstart", unlock);
-    document.removeEventListener("keydown", onKeydown);
-  };
-}
-
-function playMusic() {
-  if (!musicPlayer || !musicPlayerReady) {
-    return;
-  }
-
-  musicShouldPlay = true;
-  musicInitialUnlockPending = false;
-  tryEnableMusicSound();
-}
-
-function pauseMusic() {
-  if (!musicPlayer || !musicPlayerReady) {
-    return;
-  }
-
-  musicShouldPlay = false;
-  musicAwaitingUserGesture = false;
-  musicInitialUnlockPending = false;
-  musicPlayer.pauseVideo();
-  removeMusicUnlockHandlers();
-  updateMusicButton();
-}
-
-function ensureMusicPlayer() {
-  if (musicPlayer || !window.YT || !window.YT.Player) {
-    return;
-  }
-
-  musicPlayer = new window.YT.Player("youtubePlayer", {
-    height: "1",
-    width: "1",
-    videoId: MUSIC_VIDEO_ID,
-    playerVars: {
-      autoplay: 1,
-      controls: 0,
-      disablekb: 1,
-      fs: 0,
-      iv_load_policy: 3,
-      loop: 1,
-      mute: 0,
-      modestbranding: 1,
-      playsinline: 1,
-      rel: 0,
-      playlist: MUSIC_VIDEO_ID
-    },
-    events: {
-      onReady: () => {
-        musicPlayerReady = true;
-        musicShouldPlay = true;
-        musicInitialUnlockPending = true;
-        musicAwaitingUserGesture = true;
-        musicPlayer.setVolume(MUSIC_VOLUME);
-        installMusicUnlockHandlers();
-        tryEnableMusicSound(true);
-        updateMusicButton();
-
-        window.setTimeout(() => {
-          tryEnableMusicSound(true);
-          if (musicAwaitingUserGesture) {
-            installMusicUnlockHandlers();
-          }
-        }, 650);
-      },
-      onStateChange: (event) => {
-        if (!window.YT || !window.YT.PlayerState) {
-          return;
-        }
-
-        if (event.data === window.YT.PlayerState.PLAYING) {
-          musicShouldPlay = true;
-        } else if (event.data === window.YT.PlayerState.PAUSED) {
-          if (musicShouldPlay) {
-            musicPlayer.playVideo();
-          }
-        } else if (event.data === window.YT.PlayerState.ENDED) {
-          musicShouldPlay = true;
-          musicPlayer.playVideo();
-        }
-
-        if (musicShouldPlay && musicAwaitingUserGesture) {
-          installMusicUnlockHandlers();
-        }
-
-        refreshMusicGestureState();
-      }
-    }
-  });
-}
-
-function handleMusicToggle() {
-  ensureMusicPlayer();
-
-  if (!musicPlayerReady) {
-    musicShouldPlay = true;
-    if (musicToggleBtn) {
-      musicToggleBtn.textContent = "Cargando musica...";
-    }
-    return;
-  }
-
-  if (musicAwaitingUserGesture) {
-    musicShouldPlay = true;
-    musicInitialUnlockPending = false;
-    tryEnableMusicSound(true);
-    installMusicUnlockHandlers();
-    return;
-  }
-
-  if (musicShouldPlay) {
-    pauseMusic();
-    return;
-  }
-
-  musicInitialUnlockPending = false;
-  playMusic();
-  installMusicUnlockHandlers();
 }
 
 function renderImages(images) {
@@ -550,6 +316,34 @@ function renderActions(actions) {
   }
 }
 
+function createConfetti() {
+  const container = document.createElement("div");
+  container.className = "confetti-container";
+  document.body.appendChild(container);
+
+  const colors = ["#ff6b9d", "#ff94af", "#ffd869", "#ffb3c6", "#ff8fa9", "#ffeeb8", "#cf2f52"];
+  const types = ["square", "circle", "heart", "heart", "heart"];
+  const pieces = 60;
+
+  for (let i = 0; i < pieces; i += 1) {
+    const piece = document.createElement("div");
+    const type = types[Math.floor(Math.random() * types.length)];
+
+    piece.className = `confetti-piece ${type}`;
+    piece.style.setProperty("--color", colors[Math.floor(Math.random() * colors.length)]);
+    piece.style.setProperty("--left", `${Math.random() * 100}%`);
+    piece.style.setProperty("--duration", `${2.5 + Math.random() * 2}s`);
+    piece.style.setProperty("--delay", `${Math.random() * 0.5}s`);
+    piece.style.setProperty("--rotation", `${Math.random() * 720 - 360}deg`);
+
+    container.appendChild(piece);
+  }
+
+  setTimeout(() => {
+    container.remove();
+  }, 5000);
+}
+
 function openReveal(step, actions = []) {
   if (revealContent) {
     revealContent.classList.toggle("full-image-mode", Boolean(step.fullImageMode));
@@ -571,6 +365,10 @@ function openReveal(step, actions = []) {
 
   revealModal.hidden = false;
   document.body.classList.add("modal-open");
+
+  if (!step.skipConfetti) {
+    createConfetti();
+  }
 }
 
 function closeModal() {
@@ -867,24 +665,5 @@ if (resetBtn) {
 if (secretGiftBtn) {
   secretGiftBtn.addEventListener("click", openSecretGift);
 }
-
-const previousYouTubeReady = window.onYouTubeIframeAPIReady;
-window.onYouTubeIframeAPIReady = () => {
-  if (typeof previousYouTubeReady === "function") {
-    previousYouTubeReady();
-  }
-
-  ensureMusicPlayer();
-};
-
-if (musicToggleBtn) {
-  musicToggleBtn.addEventListener("click", handleMusicToggle);
-}
-
-if (window.YT && window.YT.Player) {
-  ensureMusicPlayer();
-}
-
-updateMusicButton();
 
 openReveal(welcomeReveal);
