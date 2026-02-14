@@ -1094,18 +1094,9 @@ h1 {
   position: absolute;
   top: -50px;
   font-size: 2.5rem;
-  animation: itemFall linear forwards;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
   z-index: 1;
-}
-
-@keyframes itemFall {
-  from {
-    top: -50px;
-  }
-  to {
-    top: 100%;
-  }
+  pointer-events: none;
 }
 
 .game-victory {
